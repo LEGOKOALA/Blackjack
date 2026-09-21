@@ -16,28 +16,57 @@
 
         <h1>Blackjack</h1>
 
-        <section class="dealer">
-            <h2>Dealer</h2>
-            <div id="dealer-cards" class="cards">
+        <section class="table">
+
+            <section class="dealer">
+                <h2>Dealer</h2>
+
+                <div id="dealer-cards" class="cards"></div>
+
+                <p>Score: <span id="dealer-score">0</span></p>
+            </section>
+
+
+            <div class="deck-area">
+
+                <div id="deck" class="playing-card deck-card">
+                    <div class="card-back"></div>
+                </div>
+
+                <p id="deck-status">Shuffling...</p>
+
             </div>
-            <p>Score: <span id="dealer-score">0</span></p>
+
+
+            <section class="player">
+                <h2>Player</h2>
+
+                <div id="player-cards" class="cards"></div>
+
+                <p>Score: <span id="player-score">0</span></p>
+            </section>
+
         </section>
 
-        <section class="player">
-            <h2>Player</h2>
-            <div id="player-cards" class="cards">
-            </div>
-            <p>Score: <span id="player-score">0</span></p>
-        </section>
 
         <section class="controls">
+
             <button id="hit-button">Hit</button>
+
             <button id="stand-button">Stand</button>
+
             <button id="new-game-button">New Game</button>
+
         </section>
-        
-        <p id="message">Press New Game to Start!</p>
+
+
+        <p id="message" aria-live="polite">
+            Press New Game to start!
+        </p>
+
     </main>
-        <script src="script.js"></script>
+
+    <script src="script.js"></script>
+
 </body>
 </html>

@@ -1,28 +1,64 @@
-// The suits and ranks for the deck
+
+
 const suits = ["♥", "♦", "♣", "♠"];
+
 const ranks = [
-    "A", "2", "3", "4", "5", "6", "7",
-    "8", "9", "10", "J", "Q", "K"
+    "A",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",
+    "Q",
+    "K"
 ];
 
-// Game variables
+
 let deck = [];
+
 let playerHand = [];
+
 let dealerHand = [];
+
 let gameOver = false;
 
+let dealerHidden = true;
 
-const playerCardsElement = document.getElementById("player-cards");
-const dealerCardsElement = document.getElementById("dealer-cards");
 
-const playerScoreElement = document.getElementById("player-score");
-const dealerScoreElement = document.getElementById("dealer-score");
+const playerCardsElement =
+    document.getElementById("player-cards");
 
-const messageElement = document.getElementById("message");
+const dealerCardsElement =
+    document.getElementById("dealer-cards");
 
-const hitButton = document.getElementById("hit-button");
-const standButton = document.getElementById("stand-button");
-const newGameButton = document.getElementById("new-game-button");
+const playerScoreElement =
+    document.getElementById("player-score");
+
+const dealerScoreElement =
+    document.getElementById("dealer-score");
+
+const messageElement =
+    document.getElementById("message");
+
+const hitButton =
+    document.getElementById("hit-button");
+
+const standButton =
+    document.getElementById("stand-button");
+
+const newGameButton =
+    document.getElementById("new-game-button");
+
+const deckElement =
+    document.getElementById("deck");
+
+const deckStatus =
+    document.getElementById("deck-status");
 
 
 function createDeck() {
@@ -47,7 +83,8 @@ function shuffleDeck() {
 
     for (let i = deck.length - 1; i > 0; i--) {
 
-        const randomIndex = Math.floor(Math.random() * (i + 1));
+        const randomIndex =
+            Math.floor(Math.random() * (i + 1));
 
         const temporaryCard = deck[i];
 
@@ -64,13 +101,16 @@ function dealCard(hand) {
 
     hand.push(card);
 
+    return card;
 }
 
 
 function calculateScore(hand) {
 
     let score = 0;
+
     let aces = 0;
+
 
     for (let card of hand) {
 
@@ -82,12 +122,17 @@ function calculateScore(hand) {
 
             score += 10;
 
-        } else if (card.rank === "A") {
+        }
+
+        else if (card.rank === "A") {
 
             score += 11;
+
             aces++;
 
-        } else {
+        }
+
+        else {
 
             score += Number(card.rank);
 
@@ -95,183 +140,562 @@ function calculateScore(hand) {
     }
 
 
-    // Turn an Ace from 11 into 1
-    // if the hand would otherwise go over 21
-
     while (score > 21 && aces > 0) {
 
         score -= 10;
-        aces--;
 
+        aces--;
     }
+
 
     return score;
 }
 
 
+function createCardElement(card, hidden = false) {
+
+    const cardElement =
+        document.createElement("div");
+
+    cardElement.classList.add("playing-card");
+
+
+    const cardBack =
+        document.createElement("div");
+
+    cardBack.classList.add("card-back");
+
+
+
+    const cardFace =
+        document.createElement("div");
+
+    cardFace.classList.add("card-face");
+
+
+    // Hearts and diamonds are red
+
+    if (
+        card.suit === "♥" ||
+        card.suit === "♦"
+    ) {
+
+        cardFace.classList.add("red");
+    }
+
+
+    // Top-left corner
+
+    const topCorner =
+        document.createElement("div");
+
+    topCorner.classList.add("card-corner");
+
+    topCorner.innerHTML =
+        `${card.rank}<br>${card.suit}`;
+
+
+    // Center suit
+
+    const center =
+        document.createElement("div");
+
+    center.classList.add("card-center");
+
+    center.textContent =
+        card.suit;
+
+
+    // Bottom-right corner
+
+    const bottomCorner =
+        document.createElement("div");
+
+    bottomCorner.classList.add(
+        "card-corner",
+        "bottom"
+    );
+
+    bottomCorner.innerHTML =
+        `${card.rank}<br>${card.suit}`;
+
+
+    cardFace.appendChild(topCorner);
+
+    cardFace.appendChild(center);
+
+    cardFace.appendChild(bottomCorner);
+
+
+    cardElement.appendChild(cardBack);
+
+    cardElement.appendChild(cardFace);
+
+
+    if (hidden) {
+
+        cardElement.classList.add("flipped");
+
+    }
+
+
+    return cardElement;
+}
+
+
 function displayCards() {
 
-    // Clear the old cards
     playerCardsElement.innerHTML = "";
+
     dealerCardsElement.innerHTML = "";
 
 
-    // Display player's cards
-
     for (let card of playerHand) {
 
-        const cardElement = document.createElement("div");
+        const cardElement =
+            createCardElement(card);
 
-        cardElement.classList.add("card");
-
-        cardElement.textContent = card.rank + card.suit;
-
-        playerCardsElement.appendChild(cardElement);
+        playerCardsElement.appendChild(
+            cardElement
+        );
     }
 
 
-    // Display dealer's cards
+    for (
+        let i = 0;
+        i < dealerHand.length;
+        i++
+    ) {
 
-    for (let card of dealerHand) {
+        const hidden =
+            i === 0 && dealerHidden;
 
-        const cardElement = document.createElement("div");
+        const cardElement =
+            createCardElement(
+                dealerHand[i],
+                hidden
+            );
 
-        cardElement.classList.add("card");
-
-        cardElement.textContent = card.rank + card.suit;
-
-        dealerCardsElement.appendChild(cardElement);
+        dealerCardsElement.appendChild(
+            cardElement
+        );
     }
 
-
-    // Update scores
 
     playerScoreElement.textContent =
         calculateScore(playerHand);
 
-    dealerScoreElement.textContent =
-        calculateScore(dealerHand);
+
+    if (dealerHidden) {
+
+        dealerScoreElement.textContent = "?";
+
+    } else {
+
+        dealerScoreElement.textContent =
+            calculateScore(dealerHand);
+    }
 }
 
 
-function newGame() {
+function animateDeal(hand, element, hidden = false) {
+    const card = dealCard(hand);
+
+    const cardElement = createCardElement(card, true);
+
+    element.appendChild(cardElement);
+
+    const deckRect = deckElement.getBoundingClientRect();
+    const cardRect = cardElement.getBoundingClientRect();
+
+    const startX =
+        deckRect.left +
+        deckRect.width / 2 -
+        (cardRect.left + cardRect.width / 2);
+
+    const startY =
+        deckRect.top +
+        deckRect.height / 2 -
+        (cardRect.top + cardRect.height / 2);
+
+    cardElement.style.translate =
+        `${startX}px ${startY}px`;
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            cardElement.style.translate = "0 0";
+        });
+    });
+
+    setTimeout(() => {
+        if (!hidden) {
+            cardElement.classList.remove("flipped");
+        }
+    }, 500);
+
+    displayScoresOnly();
+}
+
+
+// =============================
+// UPDATE ONLY SCORES
+// =============================
+
+function displayScoresOnly() {
+
+    playerScoreElement.textContent =
+        calculateScore(playerHand);
+
+
+    if (dealerHidden) {
+
+        dealerScoreElement.textContent = "?";
+
+    } else {
+
+        dealerScoreElement.textContent =
+            calculateScore(dealerHand);
+    }
+}
+
+
+// =============================
+// START NEW GAME
+// =============================
+
+async function newGame() {
+
+    gameOver = true;
+
+    hitButton.disabled = true;
+
+    standButton.disabled = true;
+
+
+    playerHand = [];
+
+    dealerHand = [];
+
+
+    // -------------------------
+    // Shuffle
+    // -------------------------
+
+    deckStatus.textContent =
+        "Shuffling...";
+
+    deckElement.classList.add(
+        "shuffling"
+    );
+
 
     createDeck();
 
     shuffleDeck();
 
-    playerHand = [];
-    dealerHand = [];
+
+    await wait(1000);
+
+
+    deckElement.classList.remove(
+        "shuffling"
+    );
+
+
+    deckStatus.textContent =
+        "Dealing";
+
+
+    dealerHidden = true;
+
+
+    playerCardsElement.innerHTML = "";
+
+    dealerCardsElement.innerHTML = "";
+
+
+    // -------------------------
+    // Deal first card
+    // -------------------------
+
+    animateDeal(
+        playerHand,
+        playerCardsElement
+    );
+
+
+    await wait(700);
+
+
+    // -------------------------
+    // Dealer first card
+    // -------------------------
+
+    animateDeal(
+        dealerHand,
+        dealerCardsElement,
+        true
+    );
+
+
+    await wait(700);
+
+
+    // -------------------------
+    // Player second card
+    // -------------------------
+
+    animateDeal(
+        playerHand,
+        playerCardsElement
+    );
+
+
+    await wait(700);
+
+
+    // -------------------------
+    // Dealer second card
+    // -------------------------
+
+    animateDeal(
+        dealerHand,
+        dealerCardsElement
+    );
+
+
+    await wait(700);
+
+
+    deckStatus.textContent =
+        "Deck";
+
 
     gameOver = false;
 
-    // Deal two cards to player
-    dealCard(playerHand);
-    dealCard(playerHand);
-
-    // Deal two cards to dealer
-    dealCard(dealerHand);
-    dealCard(dealerHand);
-
-    messageElement.textContent = "Your turn!";
-
     hitButton.disabled = false;
+
     standButton.disabled = false;
 
-    displayCards();
+
+    messageElement.textContent =
+        "Your turn!";
+
+
+    displayScoresOnly();
+
 
     checkBlackjack();
 }
 
 
-function checkBlackjack() {
+// =============================
+// WAIT FUNCTION
+// =============================
 
-    const playerScore = calculateScore(playerHand);
-    const dealerScore = calculateScore(dealerHand);
+function wait(milliseconds) {
 
-    if (playerScore === 21 && dealerScore === 21) {
-
-        messageElement.textContent = "Both have Blackjack! Push.";
-
-        gameOver = true;
-
-    } else if (playerScore === 21) {
-
-        messageElement.textContent = "Blackjack! You win!";
-
-        gameOver = true;
-
-    } else if (dealerScore === 21) {
-
-        messageElement.textContent = "Dealer has Blackjack!";
-
-        gameOver = true;
-    }
-
-
-    if (gameOver) {
-
-        hitButton.disabled = true;
-        standButton.disabled = true;
-
-    }
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                milliseconds
+            )
+    );
 }
 
 
-function hit() {
+// =============================
+// HIT
+// =============================
+
+async function hit() {
 
     if (gameOver) {
         return;
     }
 
-    dealCard(playerHand);
 
-    displayCards();
+    hitButton.disabled = true;
 
-    const playerScore = calculateScore(playerHand);
+
+    deckStatus.textContent =
+        "Dealing...";
+
+
+    animateDeal(
+        playerHand,
+        playerCardsElement
+    );
+
+
+    await wait(700);
+
+
+    const playerScore =
+        calculateScore(playerHand);
 
 
     if (playerScore > 21) {
 
-        messageElement.textContent = "Bust! Dealer wins.";
+        messageElement.textContent =
+            "Bust! Dealer wins.";
 
         gameOver = true;
 
         hitButton.disabled = true;
+
         standButton.disabled = true;
 
-    } else if (playerScore === 21) {
+    }
 
-        messageElement.textContent = "21! You should stand.";
+    else if (playerScore === 21) {
+
+        messageElement.textContent =
+            "21!";
+
+        hitButton.disabled = false;
 
     }
+
+    else {
+
+        hitButton.disabled = false;
+    }
+
+
+    deckStatus.textContent =
+        "Deck";
 }
 
 
-function stand() {
+// =============================
+// STAND
+// =============================
+
+async function stand() {
 
     if (gameOver) {
         return;
     }
 
-    // Dealer draws until reaching at least 17
 
-    while (calculateScore(dealerHand) < 17) {
+    gameOver = true;
 
-        dealCard(dealerHand);
+    hitButton.disabled = true;
 
-    }
+    standButton.disabled = true;
+
+
+    // Reveal dealer's hidden card
+
+    dealerHidden = false;
 
     displayCards();
+
+
+    await wait(700);
+
+
+    // Dealer draws until 17
+
+    while (
+        calculateScore(dealerHand) < 17
+    ) {
+
+        deckStatus.textContent =
+            "Dealer drawing...";
+
+
+        animateDeal(
+            dealerHand,
+            dealerCardsElement
+        );
+
+
+        await wait(700);
+    }
+
+
+    deckStatus.textContent =
+        "Deck";
+
 
     determineWinner();
 }
 
 
+// =============================
+// CHECK BLACKJACK
+// =============================
+
+function checkBlackjack() {
+
+    const playerScore =
+        calculateScore(playerHand);
+
+    const dealerScore =
+        calculateScore(dealerHand);
+
+
+    if (
+        playerScore === 21 &&
+        dealerScore === 21
+    ) {
+
+        dealerHidden = false;
+
+        displayCards();
+
+        messageElement.textContent =
+            "Both have Blackjack! Push.";
+
+        gameOver = true;
+
+    }
+
+    else if (playerScore === 21) {
+
+        messageElement.textContent =
+            "Blackjack! You win!";
+
+        gameOver = true;
+
+    }
+
+    else if (dealerScore === 21) {
+
+        dealerHidden = false;
+
+        displayCards();
+
+        messageElement.textContent =
+            "Dealer has Blackjack!";
+
+        gameOver = true;
+    }
+
+
+    if (gameOver) {
+
+        hitButton.disabled = true;
+
+        standButton.disabled = true;
+    }
+}
+
+
+// =============================
+// DETERMINE WINNER
+// =============================
+
 function determineWinner() {
 
-    const playerScore = calculateScore(playerHand);
-    const dealerScore = calculateScore(dealerHand);
+    const playerScore =
+        calculateScore(playerHand);
+
+    const dealerScore =
+        calculateScore(dealerHand);
 
 
     if (dealerScore > 21) {
@@ -279,35 +703,54 @@ function determineWinner() {
         messageElement.textContent =
             "Dealer busts! You win!";
 
-    } else if (playerScore > dealerScore) {
+    }
+
+    else if (playerScore > dealerScore) {
 
         messageElement.textContent =
             "You win!";
 
-    } else if (playerScore < dealerScore) {
+    }
+
+    else if (playerScore < dealerScore) {
 
         messageElement.textContent =
             "Dealer wins!";
 
-    } else {
+    }
+
+    else {
 
         messageElement.textContent =
             "Push! It's a tie.";
     }
-
-
-    gameOver = true;
-
-    hitButton.disabled = true;
-    standButton.disabled = true;
 }
 
 
-hitButton.addEventListener("click", hit);
+// =============================
+// BUTTONS
+// =============================
 
-standButton.addEventListener("click", stand);
+hitButton.addEventListener(
+    "click",
+    hit
+);
 
-newGameButton.addEventListener("click", newGame);
 
+standButton.addEventListener(
+    "click",
+    stand
+);
+
+
+newGameButton.addEventListener(
+    "click",
+    newGame
+);
+
+
+// =============================
+// START
+// =============================
 
 newGame();
