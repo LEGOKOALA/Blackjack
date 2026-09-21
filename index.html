@@ -1,70 +1,197 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Blackjack</title>
+    <title>Royal Blackjack</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <main class="game">
+    <main class="game-container">
 
-        <h1>Blackjack</h1>
+        <!-- HEADER -->
+        <header class="top-bar">
 
+            <div class="brand">
+                <span class="brand-icon">♠</span>
+                <div>
+                    <h1>ROYAL BLACKJACK</h1>
+                    <p>Classic Casino Experience</p>
+                </div>
+            </div>
+
+            <div class="bankroll-box">
+                <span>Bankroll</span>
+                <strong id="bankroll">$1,000</strong>
+            </div>
+
+        </header>
+
+
+        <!-- STATISTICS -->
+        <section class="stats-bar">
+
+            <div class="stat">
+                <span>Wins</span>
+                <strong id="wins">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Losses</span>
+                <strong id="losses">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Pushes</span>
+                <strong id="pushes">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Current Bet</span>
+                <strong id="current-bet">$25</strong>
+            </div>
+
+        </section>
+
+
+        <!-- GAME TABLE -->
         <section class="table">
 
-            <section class="dealer">
-                <h2>Dealer</h2>
+            <div class="table-glow"></div>
 
-                <div id="dealer-cards" class="cards"></div>
+            <!-- DEALER AREA -->
+            <section class="hand-area dealer-area">
 
-                <p>Score: <span id="dealer-score">0</span></p>
+                <div class="hand-header">
+                    <h2>Dealer</h2>
+                    <span class="score">
+                        Score:
+                        <strong id="dealer-score">?</strong>
+                    </span>
+                </div>
+
+                <div class="cards" id="dealer-cards"></div>
+
             </section>
 
 
-            <div class="deck-area">
+            <!-- PLAYER AREA -->
+            <section class="hand-area player-area">
 
-                <div id="deck" class="playing-card deck-card">
-                    <div class="card-back"></div>
+                <div class="hand-header">
+                    <h2>You</h2>
+                    <span class="score">
+                        Score:
+                        <strong id="player-score">0</strong>
+                    </span>
                 </div>
 
-                <p id="deck-status">Shuffling...</p>
+                <div class="cards" id="player-cards"></div>
+
+            </section>
+
+
+            <!-- DECK ON RIGHT -->
+            <div class="deck-area">
+
+                <div class="deck-card" id="deck">
+
+                    <div class="deck-pattern">
+                        <span>♠</span>
+                        <span>♥</span>
+                        <span>♦</span>
+                        <span>♣</span>
+                    </div>
+
+                </div>
+
+                <p id="deck-status">Ready</p>
 
             </div>
 
 
-            <section class="player">
-                <h2>Player</h2>
-
-                <div id="player-cards" class="cards"></div>
-
-                <p>Score: <span id="player-score">0</span></p>
-            </section>
+            <!-- MESSAGE -->
+            <div class="message-box">
+                <p id="message">Place your bet and deal.</p>
+            </div>
 
         </section>
 
 
+        <!-- CONTROLS -->
         <section class="controls">
 
-            <button id="hit-button">Hit</button>
+            <div class="bet-controls">
 
-            <button id="stand-button">Stand</button>
+                <div class="bet-heading">
+                    <label for="bet-slider">Your Bet</label>
+                    <strong id="bet-display">$25</strong>
+                </div>
 
-            <button id="new-game-button">New Game</button>
+                <input
+                    type="range"
+                    id="bet-slider"
+                    min="5"
+                    max="100"
+                    step="5"
+                    value="25"
+                >
+
+                <div class="quick-bets">
+
+                    <button class="quick-bet" data-bet="5">$5</button>
+                    <button class="quick-bet" data-bet="25">$25</button>
+                    <button class="quick-bet" data-bet="50">$50</button>
+                    <button class="quick-bet" data-bet="100">$100</button>
+
+                </div>
+
+            </div>
+
+
+            <div class="action-buttons">
+
+                <button id="deal-button" class="action-button primary">
+                    Deal
+                </button>
+
+                <button id="hit-button" class="action-button" disabled>
+                    Hit
+                </button>
+
+                <button id="stand-button" class="action-button" disabled>
+                    Stand
+                </button>
+
+                <button id="double-button" class="action-button" disabled>
+                    Double Down
+                </button>
+
+                <button id="new-round-button" class="action-button secondary">
+                    New Round
+                </button>
+
+            </div>
+
+
+            <button id="reset-button" class="reset-button">
+                Reset Virtual Bankroll
+            </button>
 
         </section>
 
 
-        <p id="message" aria-live="polite">
-            Press New Game to start!
-        </p>
+        <footer>
+            <p>Virtual currency only • Play responsibly</p>
+        </footer>
 
     </main>
+
 
     <script src="script.js"></script>
 

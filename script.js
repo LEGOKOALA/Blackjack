@@ -1,4 +1,10 @@
 
+"use strict";
+
+
+// =====================================
+// GAME DATA
+// =====================================
 
 const suits = ["♥", "♦", "♣", "♠"];
 
@@ -20,15 +26,30 @@ const ranks = [
 
 
 let deck = [];
-
 let playerHand = [];
-
 let dealerHand = [];
 
-let gameOver = false;
-
+let gameOver = true;
 let dealerHidden = true;
+let roundActive = false;
+let dealingInProgress = false;
+let playerHasDoubled = false;
 
+
+// =====================================
+// BANKROLL AND STATISTICS
+// =====================================
+
+let bankroll = 1000;
+let wins = 0;
+let losses = 0;
+let pushes = 0;
+let currentBet = 25;
+
+
+// =====================================
+// DOM ELEMENTS
+// =====================================
 
 const playerCardsElement =
     document.getElementById("player-cards");
@@ -45,112 +66,199 @@ const dealerScoreElement =
 const messageElement =
     document.getElementById("message");
 
-const hitButton =
-    document.getElementById("hit-button");
-
-const standButton =
-    document.getElementById("stand-button");
-
-const newGameButton =
-    document.getElementById("new-game-button");
-
 const deckElement =
     document.getElementById("deck");
 
 const deckStatus =
     document.getElementById("deck-status");
 
+const bankrollElement =
+    document.getElementById("bankroll");
+
+const winsElement =
+    document.getElementById("wins");
+
+const lossesElement =
+    document.getElementById("losses");
+
+const pushesElement =
+    document.getElementById("pushes");
+
+const currentBetElement =
+    document.getElementById("current-bet");
+
+const betSlider =
+    document.getElementById("bet-slider");
+
+const betDisplay =
+    document.getElementById("bet-display");
+
+const dealButton =
+    document.getElementById("deal-button");
+
+const hitButton =
+    document.getElementById("hit-button");
+
+const standButton =
+    document.getElementById("stand-button");
+
+const doubleButton =
+    document.getElementById("double-button");
+
+const newRoundButton =
+    document.getElementById("new-round-button");
+
+const resetButton =
+    document.getElementById("reset-button");
+
+
+// =====================================
+// UTILITY FUNCTIONS
+// =====================================
+
+function wait(milliseconds) {
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
+
+function formatMoney(amount) {
+    return `$${amount.toLocaleString()}`;
+}
+
+
+function updateInterface() {
+    bankrollElement.textContent = formatMoney(bankroll);
+    winsElement.textContent = wins;
+    lossesElement.textContent = losses;
+    pushesElement.textContent = pushes;
+
+    currentBetElement.textContent =
+        formatMoney(currentBet);
+
+    betDisplay.textContent =
+        formatMoney(currentBet);
+
+    betSlider.value = currentBet;
+}
+
+
+function setMessage(message) {
+    messageElement.textContent = message;
+}
+
+
+function updateButtons() {
+    dealButton.disabled =
+        roundActive || dealingInProgress;
+
+    hitButton.disabled =
+        !roundActive || gameOver || dealingInProgress;
+
+    standButton.disabled =
+        !roundActive || gameOver || dealingInProgress;
+
+    doubleButton.disabled =
+        !roundActive ||
+        gameOver ||
+        dealingInProgress ||
+        playerHasDoubled ||
+        playerHand.length !== 2 ||
+        bankroll < currentBet;
+
+    newRoundButton.disabled =
+        dealingInProgress;
+}
+
+
+// =====================================
+// DECK FUNCTIONS
+// =====================================
 
 function createDeck() {
-
     deck = [];
 
-    for (let suit of suits) {
-
-        for (let rank of ranks) {
-
+    for (const suit of suits) {
+        for (const rank of ranks) {
             deck.push({
                 rank: rank,
                 suit: suit
             });
-
         }
     }
 }
 
 
 function shuffleDeck() {
-
     for (let i = deck.length - 1; i > 0; i--) {
-
         const randomIndex =
             Math.floor(Math.random() * (i + 1));
 
-        const temporaryCard = deck[i];
-
-        deck[i] = deck[randomIndex];
-
-        deck[randomIndex] = temporaryCard;
+        [deck[i], deck[randomIndex]] =
+            [deck[randomIndex], deck[i]];
     }
 }
 
 
-function dealCard(hand) {
+function drawCard() {
+    if (deck.length === 0) {
+        createDeck();
+        shuffleDeck();
+    }
 
-    const card = deck.pop();
-
-    hand.push(card);
-
-    return card;
+    return deck.pop();
 }
 
 
+// =====================================
+// SCORE CALCULATION
+// =====================================
+
 function calculateScore(hand) {
-
     let score = 0;
-
     let aces = 0;
 
-
-    for (let card of hand) {
+    for (const card of hand) {
 
         if (
             card.rank === "J" ||
             card.rank === "Q" ||
             card.rank === "K"
         ) {
-
             score += 10;
-
         }
 
         else if (card.rank === "A") {
-
             score += 11;
-
             aces++;
-
         }
 
         else {
-
             score += Number(card.rank);
-
         }
     }
 
-
     while (score > 21 && aces > 0) {
-
         score -= 10;
-
         aces--;
     }
-
 
     return score;
 }
 
+
+function isBlackjack(hand) {
+    return (
+        hand.length === 2 &&
+        calculateScore(hand) === 21
+    );
+}
+
+
+// =====================================
+// CARD ELEMENT CREATION
+// =====================================
 
 function createCardElement(card, hidden = false) {
 
@@ -166,25 +274,19 @@ function createCardElement(card, hidden = false) {
     cardBack.classList.add("card-back");
 
 
-
     const cardFace =
         document.createElement("div");
 
     cardFace.classList.add("card-face");
 
 
-    // Hearts and diamonds are red
-
     if (
         card.suit === "♥" ||
         card.suit === "♦"
     ) {
-
         cardFace.classList.add("red");
     }
 
-
-    // Top-left corner
 
     const topCorner =
         document.createElement("div");
@@ -195,18 +297,13 @@ function createCardElement(card, hidden = false) {
         `${card.rank}<br>${card.suit}`;
 
 
-    // Center suit
-
     const center =
         document.createElement("div");
 
     center.classList.add("card-center");
 
-    center.textContent =
-        card.suit;
+    center.textContent = card.suit;
 
-
-    // Bottom-right corner
 
     const bottomCorner =
         document.createElement("div");
@@ -221,21 +318,16 @@ function createCardElement(card, hidden = false) {
 
 
     cardFace.appendChild(topCorner);
-
     cardFace.appendChild(center);
-
     cardFace.appendChild(bottomCorner);
 
 
     cardElement.appendChild(cardBack);
-
     cardElement.appendChild(cardFace);
 
 
     if (hidden) {
-
         cardElement.classList.add("flipped");
-
     }
 
 
@@ -243,103 +335,9 @@ function createCardElement(card, hidden = false) {
 }
 
 
-function displayCards() {
-
-    playerCardsElement.innerHTML = "";
-
-    dealerCardsElement.innerHTML = "";
-
-
-    for (let card of playerHand) {
-
-        const cardElement =
-            createCardElement(card);
-
-        playerCardsElement.appendChild(
-            cardElement
-        );
-    }
-
-
-    for (
-        let i = 0;
-        i < dealerHand.length;
-        i++
-    ) {
-
-        const hidden =
-            i === 0 && dealerHidden;
-
-        const cardElement =
-            createCardElement(
-                dealerHand[i],
-                hidden
-            );
-
-        dealerCardsElement.appendChild(
-            cardElement
-        );
-    }
-
-
-    playerScoreElement.textContent =
-        calculateScore(playerHand);
-
-
-    if (dealerHidden) {
-
-        dealerScoreElement.textContent = "?";
-
-    } else {
-
-        dealerScoreElement.textContent =
-            calculateScore(dealerHand);
-    }
-}
-
-
-function animateDeal(hand, element, hidden = false) {
-    const card = dealCard(hand);
-
-    const cardElement = createCardElement(card, true);
-
-    element.appendChild(cardElement);
-
-    const deckRect = deckElement.getBoundingClientRect();
-    const cardRect = cardElement.getBoundingClientRect();
-
-    const startX =
-        deckRect.left +
-        deckRect.width / 2 -
-        (cardRect.left + cardRect.width / 2);
-
-    const startY =
-        deckRect.top +
-        deckRect.height / 2 -
-        (cardRect.top + cardRect.height / 2);
-
-    cardElement.style.translate =
-        `${startX}px ${startY}px`;
-
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            cardElement.style.translate = "0 0";
-        });
-    });
-
-    setTimeout(() => {
-        if (!hidden) {
-            cardElement.classList.remove("flipped");
-        }
-    }, 500);
-
-    displayScoresOnly();
-}
-
-
-// =============================
-// UPDATE ONLY SCORES
-// =============================
+// =====================================
+// SCORE DISPLAY
+// =====================================
 
 function displayScoresOnly() {
 
@@ -348,189 +346,388 @@ function displayScoresOnly() {
 
 
     if (dealerHidden) {
-
         dealerScoreElement.textContent = "?";
+    }
 
-    } else {
-
+    else {
         dealerScoreElement.textContent =
             calculateScore(dealerHand);
     }
 }
 
 
-// =============================
-// START NEW GAME
-// =============================
+// =====================================
+// CARD DEALING ANIMATION
+// =====================================
 
-async function newGame() {
+async function animateDeal(hand, element, hidden = false) {
 
-    gameOver = true;
+    const card = drawCard();
 
-    hitButton.disabled = true;
-
-    standButton.disabled = true;
+    hand.push(card);
 
 
-    playerHand = [];
-
-    dealerHand = [];
-
-
-    // -------------------------
-    // Shuffle
-    // -------------------------
-
-    deckStatus.textContent =
-        "Shuffling...";
-
-    deckElement.classList.add(
-        "shuffling"
-    );
+    // Create the card in its final location.
+    // It will then be visually moved to the deck.
+    const newCardElement =
+        createCardElement(card, hidden);
 
 
-    createDeck();
-
-    shuffleDeck();
+    element.appendChild(newCardElement);
 
 
-    await wait(1000);
+    // Make sure the browser calculates the final
+    // position before starting the animation.
+    const cardRect =
+        newCardElement.getBoundingClientRect();
+
+    const deckRect =
+        deckElement.getBoundingClientRect();
 
 
-    deckElement.classList.remove(
-        "shuffling"
-    );
+    const startX =
+        deckRect.left +
+        deckRect.width / 2 -
+        (cardRect.left + cardRect.width / 2);
 
 
-    deckStatus.textContent =
-        "Dealing";
+    const startY =
+        deckRect.top +
+        deckRect.height / 2 -
+        (cardRect.top + cardRect.height / 2);
 
 
-    dealerHidden = true;
+    // Turn off transitions while setting the
+    // starting position.
+    newCardElement.style.transition = "none";
 
+    newCardElement.style.transform =
+        `translate(${startX}px, ${startY}px)`;
+
+
+    // Force a layout calculation.
+    // This ensures the starting position is applied.
+    newCardElement.offsetHeight;
+
+
+    // Enable smooth movement to the destination.
+    newCardElement.style.transition =
+        "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease";
+
+
+    requestAnimationFrame(() => {
+
+        newCardElement.style.transform =
+            "translate(0, 0)";
+
+    });
+
+
+    // Wait for the movement to finish.
+    await wait(500);
+
+
+    // Reveal cards that are not supposed to stay hidden.
+    if (!hidden) {
+        newCardElement.classList.remove("flipped");
+    }
+
+
+    displayScoresOnly();
+}
+
+
+// =====================================
+// CLEAR TABLE
+// =====================================
+
+function clearTable() {
 
     playerCardsElement.innerHTML = "";
-
     dealerCardsElement.innerHTML = "";
 
+    playerHand = [];
+    dealerHand = [];
 
-    // -------------------------
-    // Deal first card
-    // -------------------------
+    playerScoreElement.textContent = "0";
+    dealerScoreElement.textContent = "?";
+}
 
-    animateDeal(
+
+// =====================================
+// BET CONTROLS
+// =====================================
+
+function setBet(amount) {
+
+    if (roundActive || dealingInProgress) {
+        return;
+    }
+
+    const maximumBet =
+        Math.min(100, bankroll);
+
+    currentBet =
+        Math.min(amount, maximumBet);
+
+    currentBet =
+        Math.max(5, currentBet);
+
+    updateInterface();
+    updateButtons();
+}
+
+
+betSlider.addEventListener("input", () => {
+
+    if (roundActive || dealingInProgress) {
+        return;
+    }
+
+    currentBet =
+        Number(betSlider.value);
+
+    if (currentBet > bankroll) {
+        currentBet = bankroll;
+    }
+
+    if (currentBet < 5) {
+        currentBet = 5;
+    }
+
+    updateInterface();
+    updateButtons();
+
+});
+
+
+document.querySelectorAll(".quick-bet").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const amount =
+            Number(button.dataset.bet);
+
+        setBet(amount);
+
+    });
+
+});
+
+
+// =====================================
+// START ROUND
+// =====================================
+
+async function startRound() {
+
+    if (dealingInProgress || roundActive) {
+        return;
+    }
+
+    if (bankroll < currentBet) {
+        setMessage("You do not have enough bankroll.");
+        return;
+    }
+
+    dealingInProgress = true;
+    gameOver = false;
+    roundActive = true;
+    dealerHidden = true;
+    playerHasDoubled = false;
+
+    bankroll -= currentBet;
+
+    updateInterface();
+    updateButtons();
+
+    clearTable();
+
+
+    deckStatus.textContent = "Shuffling";
+
+    deckElement.classList.add("shuffling");
+
+    createDeck();
+    shuffleDeck();
+
+    await wait(700);
+
+    deckElement.classList.remove("shuffling");
+
+    deckStatus.textContent = "Dealing";
+
+
+    // First player card
+    await animateDeal(
         playerHand,
         playerCardsElement
     );
 
+    await wait(180);
 
-    await wait(700);
 
-
-    // -------------------------
-    // Dealer first card
-    // -------------------------
-
-    animateDeal(
+    // First dealer card, hidden
+    await animateDeal(
         dealerHand,
         dealerCardsElement,
         true
     );
 
+    await wait(180);
 
-    await wait(700);
 
-
-    // -------------------------
-    // Player second card
-    // -------------------------
-
-    animateDeal(
+    // Second player card
+    await animateDeal(
         playerHand,
         playerCardsElement
     );
 
+    await wait(180);
 
-    await wait(700);
 
-
-    // -------------------------
-    // Dealer second card
-    // -------------------------
-
-    animateDeal(
+    // Second dealer card
+    await animateDeal(
         dealerHand,
         dealerCardsElement
     );
 
-
-    await wait(700);
-
-
-    deckStatus.textContent =
-        "Deck";
+    await wait(180);
 
 
-    gameOver = false;
+    dealingInProgress = false;
 
-    hitButton.disabled = false;
+    deckStatus.textContent = "Deck";
 
-    standButton.disabled = false;
+    updateInterface();
+    updateButtons();
 
-
-    messageElement.textContent =
-        "Your turn!";
-
-
-    displayScoresOnly();
-
+    setMessage("Your turn!");
 
     checkBlackjack();
+
 }
 
 
-// =============================
-// WAIT FUNCTION
-// =============================
+// =====================================
+// BLACKJACK CHECK
+// =====================================
 
-function wait(milliseconds) {
+function checkBlackjack() {
 
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                milliseconds
-            )
-    );
+    const playerBlackjack =
+        isBlackjack(playerHand);
+
+    const dealerBlackjack =
+        isBlackjack(dealerHand);
+
+
+    if (playerBlackjack && dealerBlackjack) {
+
+        dealerHidden = false;
+        gameOver = true;
+        roundActive = false;
+
+        bankroll += currentBet;
+
+        pushes++;
+
+        displayDealerCards();
+
+        setMessage("Both have Blackjack. Push!");
+
+    }
+
+    else if (playerBlackjack) {
+
+        dealerHidden = false;
+        gameOver = true;
+        roundActive = false;
+
+        bankroll += currentBet * 2.5;
+
+        wins++;
+
+        displayDealerCards();
+
+        setMessage("Blackjack! You win!");
+
+    }
+
+    else if (dealerBlackjack) {
+
+        dealerHidden = false;
+        gameOver = true;
+        roundActive = false;
+
+        losses++;
+
+        displayDealerCards();
+
+        setMessage("Dealer has Blackjack!");
+
+    }
+
+    updateInterface();
+    updateButtons();
+
 }
 
 
-// =============================
+// =====================================
+// DISPLAY DEALER CARDS
+// =====================================
+
+function displayDealerCards() {
+
+    dealerCardsElement.innerHTML = "";
+
+    dealerHand.forEach((card, index) => {
+
+        const hidden =
+            index === 0 && dealerHidden;
+
+        const element =
+            createCardElement(card, hidden);
+
+        dealerCardsElement.appendChild(element);
+
+    });
+
+    displayScoresOnly();
+}
+
+
+// =====================================
 // HIT
-// =============================
+// =====================================
 
 async function hit() {
 
-    if (gameOver) {
+    if (
+        gameOver ||
+        !roundActive ||
+        dealingInProgress
+    ) {
         return;
     }
 
+    dealingInProgress = true;
 
-    hitButton.disabled = true;
+    updateButtons();
 
+    deckStatus.textContent = "Dealing";
 
-    deckStatus.textContent =
-        "Dealing...";
-
-
-    animateDeal(
+    await animateDeal(
         playerHand,
         playerCardsElement
     );
 
+    await wait(150);
 
-    await wait(700);
+    dealingInProgress = false;
 
+    deckStatus.textContent = "Deck";
 
     const playerScore =
         calculateScore(playerHand);
@@ -538,156 +735,127 @@ async function hit() {
 
     if (playerScore > 21) {
 
-        messageElement.textContent =
-            "Bust! Dealer wins.";
-
         gameOver = true;
+        roundActive = false;
 
-        hitButton.disabled = true;
+        losses++;
 
-        standButton.disabled = true;
+        setMessage("Bust! Dealer wins.");
 
     }
 
     else if (playerScore === 21) {
 
-        messageElement.textContent =
-            "21!";
-
-        hitButton.disabled = false;
+        setMessage("You have 21. You can stand.");
 
     }
 
     else {
 
-        hitButton.disabled = false;
+        setMessage("Your turn!");
+
     }
 
+    updateInterface();
+    updateButtons();
 
-    deckStatus.textContent =
-        "Deck";
 }
 
 
-// =============================
-// STAND
-// =============================
+// =====================================
+// DOUBLE DOWN
+// =====================================
 
-async function stand() {
+async function doubleDown() {
 
-    if (gameOver) {
+    if (
+        gameOver ||
+        !roundActive ||
+        dealingInProgress ||
+        playerHasDoubled ||
+        playerHand.length !== 2
+    ) {
         return;
     }
 
+    if (bankroll < currentBet) {
+        setMessage("Not enough bankroll to double down.");
+        return;
+    }
 
+    bankroll -= currentBet;
+    currentBet *= 2;
+    playerHasDoubled = true;
+
+    updateInterface();
+
+    await hit();
+
+    if (!gameOver) {
+        await stand();
+    }
+
+}
+
+
+// =====================================
+// STAND
+// =====================================
+
+async function stand() {
+
+    if (
+        gameOver ||
+        !roundActive ||
+        dealingInProgress
+    ) {
+        return;
+    }
+
+    dealingInProgress = true;
     gameOver = true;
 
-    hitButton.disabled = true;
-
-    standButton.disabled = true;
-
-
-    // Reveal dealer's hidden card
+    updateButtons();
 
     dealerHidden = false;
 
-    displayCards();
+    displayDealerCards();
+
+    await wait(600);
 
 
-    await wait(700);
+    // Dealer draws until score is at least 17.
+    while (calculateScore(dealerHand) < 17) {
 
+        deckStatus.textContent = "Dealer drawing";
 
-    // Dealer draws until 17
-
-    while (
-        calculateScore(dealerHand) < 17
-    ) {
-
-        deckStatus.textContent =
-            "Dealer drawing...";
-
-
-        animateDeal(
+        await animateDeal(
             dealerHand,
             dealerCardsElement
         );
 
+        await wait(180);
 
-        await wait(700);
     }
 
 
-    deckStatus.textContent =
-        "Deck";
+    deckStatus.textContent = "Deck";
 
+    dealingInProgress = false;
+
+    roundActive = false;
 
     determineWinner();
+
+    updateInterface();
+    updateButtons();
+
 }
 
 
-// =============================
-// CHECK BLACKJACK
-// =============================
-
-function checkBlackjack() {
-
-    const playerScore =
-        calculateScore(playerHand);
-
-    const dealerScore =
-        calculateScore(dealerHand);
-
-
-    if (
-        playerScore === 21 &&
-        dealerScore === 21
-    ) {
-
-        dealerHidden = false;
-
-        displayCards();
-
-        messageElement.textContent =
-            "Both have Blackjack! Push.";
-
-        gameOver = true;
-
-    }
-
-    else if (playerScore === 21) {
-
-        messageElement.textContent =
-            "Blackjack! You win!";
-
-        gameOver = true;
-
-    }
-
-    else if (dealerScore === 21) {
-
-        dealerHidden = false;
-
-        displayCards();
-
-        messageElement.textContent =
-            "Dealer has Blackjack!";
-
-        gameOver = true;
-    }
-
-
-    if (gameOver) {
-
-        hitButton.disabled = true;
-
-        standButton.disabled = true;
-    }
-}
-
-
-// =============================
+// =====================================
 // DETERMINE WINNER
-// =============================
+// =====================================
 
 function determineWinner() {
 
@@ -698,38 +866,113 @@ function determineWinner() {
         calculateScore(dealerHand);
 
 
-    if (dealerScore > 21) {
+    if (playerScore > 21) {
 
-        messageElement.textContent =
-            "Dealer busts! You win!";
+        losses++;
+
+        setMessage("Bust! Dealer wins.");
+
+    }
+
+    else if (dealerScore > 21) {
+
+        wins++;
+
+        bankroll += currentBet * 2;
+
+        setMessage("Dealer busts! You win!");
 
     }
 
     else if (playerScore > dealerScore) {
 
-        messageElement.textContent =
-            "You win!";
+        wins++;
+
+        bankroll += currentBet * 2;
+
+        setMessage("You win!");
 
     }
 
     else if (playerScore < dealerScore) {
 
-        messageElement.textContent =
-            "Dealer wins!";
+        losses++;
+
+        setMessage("Dealer wins!");
 
     }
 
     else {
 
-        messageElement.textContent =
-            "Push! It's a tie.";
+        pushes++;
+
+        bankroll += currentBet;
+
+        setMessage("Push! It's a tie.");
+
     }
+
 }
 
 
-// =============================
-// BUTTONS
-// =============================
+// =====================================
+// NEW ROUND
+// =====================================
+
+function newRound() {
+
+    if (dealingInProgress) {
+        return;
+    }
+
+    gameOver = true;
+    roundActive = false;
+    playerHasDoubled = false;
+
+    clearTable();
+
+    deckStatus.textContent = "Ready";
+
+    setMessage("Place your bet and deal.");
+
+    updateInterface();
+    updateButtons();
+
+}
+
+
+// =====================================
+// RESET BANKROLL
+// =====================================
+
+function resetBankroll() {
+
+    if (dealingInProgress) {
+        return;
+    }
+
+    bankroll = 1000;
+    wins = 0;
+    losses = 0;
+    pushes = 0;
+    currentBet = 25;
+
+    newRound();
+
+    updateInterface();
+
+}
+
+
+// =====================================
+// EVENT LISTENERS
+// =====================================
+
+dealButton.addEventListener(
+    "click",
+    startRound
+);
+
 
 hitButton.addEventListener(
     "click",
@@ -743,14 +986,32 @@ standButton.addEventListener(
 );
 
 
-newGameButton.addEventListener(
+doubleButton.addEventListener(
     "click",
-    newGame
+    doubleDown
 );
 
 
-// =============================
-// START
-// =============================
+newRoundButton.addEventListener(
+    "click",
+    newRound
+);
 
-newGame();
+
+resetButton.addEventListener(
+    "click",
+    resetBankroll
+);
+
+
+// =====================================
+// INITIALIZE GAME
+// =====================================
+
+createDeck();
+shuffleDeck();
+
+updateInterface();
+updateButtons();
+
+setMessage("Place your bet and deal.");
