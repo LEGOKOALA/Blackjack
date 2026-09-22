@@ -297,6 +297,7 @@ button:disabled {
     flex: 0 0 82px;
 
     opacity: 1;
+
     transform: translate(0, 0);
 
     transition:
@@ -304,6 +305,13 @@ button:disabled {
         opacity 0.5s ease;
 
     perspective: 1000px;
+}
+
+.playing-card.dealing {
+    transition:
+        left 0.5s ease-out,
+        top 0.5s ease-out,
+        transform 0.4s ease;
 }
 
 
@@ -456,17 +464,16 @@ button:disabled {
 
 
 .deck-card.shuffling {
-    animation: shuffleDeck 0.35s ease-in-out infinite alternate;
+    animation: shuffleDeck 0.7s ease-in-out infinite alternate;
 }
-
 
 @keyframes shuffleDeck {
     from {
-        transform: rotate(-7deg) translateY(-3px);
+        transform: rotate(-4deg) translateX(-2px);
     }
 
     to {
-        transform: rotate(7deg) translateY(3px);
+        transform: rotate(4deg) translateX(2px);
     }
 }
 

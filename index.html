@@ -1,199 +1,53 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Royal Blackjack</title>
+    <title>Game Hub</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="home.css">
 </head>
 
 <body>
 
-    <main class="game-container">
+    <main class="home">
 
-        <!-- HEADER -->
-        <header class="top-bar">
-
-            <div class="brand">
-                <span class="brand-icon">♠</span>
-                <div>
-                    <h1>ROYAL BLACKJACK</h1>
-                    <p>Classic Casino Experience</p>
-                </div>
-            </div>
-
-            <div class="bankroll-box">
-                <span>Bankroll</span>
-                <strong id="bankroll">$1,000</strong>
-            </div>
-
+        <header class="hero">
+            <h1>Game Hub</h1>
+            <p>Choose a game to play</p>
         </header>
 
+        <section class="games" aria-label="Games">
 
-        <!-- STATISTICS -->
-        <section class="stats-bar">
+            <a href="blackjack.html" class="game-tile">
+                <div class="game-icon">🃏</div>
+                <h2>Blackjack</h2>
+                <p>Play Blackjack</p>
+            </a>
 
-            <div class="stat">
-                <span>Wins</span>
-                <strong id="wins">0</strong>
+            <div class="game-tile coming-soon">
+                <div class="game-icon">♟</div>
+                <h2>Chess</h2>
+                <p>Coming Soon</p>
             </div>
 
-            <div class="stat">
-                <span>Losses</span>
-                <strong id="losses">0</strong>
+            <div class="game-tile coming-soon">
+                <div class="game-icon">🎲</div>
+                <h2>Checkers</h2>
+                <p>Coming Soon</p>
             </div>
 
-            <div class="stat">
-                <span>Pushes</span>
-                <strong id="pushes">0</strong>
-            </div>
-
-            <div class="stat">
-                <span>Current Bet</span>
-                <strong id="current-bet">$25</strong>
-            </div>
-
-        </section>
-
-
-        <!-- GAME TABLE -->
-        <section class="table">
-
-            <div class="table-glow"></div>
-
-            <!-- DEALER AREA -->
-            <section class="hand-area dealer-area">
-
-                <div class="hand-header">
-                    <h2>Dealer</h2>
-                    <span class="score">
-                        Score:
-                        <strong id="dealer-score">?</strong>
-                    </span>
-                </div>
-
-                <div class="cards" id="dealer-cards"></div>
-
-            </section>
-
-
-            <!-- PLAYER AREA -->
-            <section class="hand-area player-area">
-
-                <div class="hand-header">
-                    <h2>You</h2>
-                    <span class="score">
-                        Score:
-                        <strong id="player-score">0</strong>
-                    </span>
-                </div>
-
-                <div class="cards" id="player-cards"></div>
-
-            </section>
-
-
-            <!-- DECK ON RIGHT -->
-            <div class="deck-area">
-
-                <div class="deck-card" id="deck">
-
-                    <div class="deck-pattern">
-                        <span>♠</span>
-                        <span>♥</span>
-                        <span>♦</span>
-                        <span>♣</span>
-                    </div>
-
-                </div>
-
-                <p id="deck-status">Ready</p>
-
-            </div>
-
-
-            <!-- MESSAGE -->
-            <div class="message-box">
-                <p id="message">Place your bet and deal.</p>
+            <div class="game-tile coming-soon">
+                <div class="game-icon">?</div>
+                <h2>More Games</h2>
+                <p>Coming Soon</p>
             </div>
 
         </section>
-
-
-        <!-- CONTROLS -->
-        <section class="controls">
-
-            <div class="bet-controls">
-
-                <div class="bet-heading">
-                    <label for="bet-slider">Your Bet</label>
-                    <strong id="bet-display">$25</strong>
-                </div>
-
-                <input
-                    type="range"
-                    id="bet-slider"
-                    min="5"
-                    max="100"
-                    step="5"
-                    value="25"
-                >
-
-                <div class="quick-bets">
-
-                    <button class="quick-bet" data-bet="5">$5</button>
-                    <button class="quick-bet" data-bet="25">$25</button>
-                    <button class="quick-bet" data-bet="50">$50</button>
-                    <button class="quick-bet" data-bet="100">$100</button>
-
-                </div>
-
-            </div>
-
-
-            <div class="action-buttons">
-
-                <button id="deal-button" class="action-button primary">
-                    Deal
-                </button>
-
-                <button id="hit-button" class="action-button" disabled>
-                    Hit
-                </button>
-
-                <button id="stand-button" class="action-button" disabled>
-                    Stand
-                </button>
-
-                <button id="double-button" class="action-button" disabled>
-                    Double Down
-                </button>
-
-                <button id="new-round-button" class="action-button secondary">
-                    New Round
-                </button>
-
-            </div>
-
-
-            <button id="reset-button" class="reset-button">
-                Reset Virtual Bankroll
-            </button>
-
-        </section>
-
-
-        <footer>
-            <p>Virtual currency only • Play responsibly</p>
-        </footer>
 
     </main>
-
-
-    <script src="script.js"></script>
 
 </body>
 </html>
